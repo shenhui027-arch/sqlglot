@@ -313,6 +313,12 @@ class SwapTable(Expression):
     pass
 
 
+class RenameTable(Expression):
+    """`RENAME TABLE a TO b [, c TO d ...]`. Each item is an `Alter` that renames one table."""
+
+    arg_types = {"expressions": True}
+
+
 class Comment(Expression):
     arg_types = {
         "this": True,

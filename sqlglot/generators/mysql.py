@@ -774,6 +774,9 @@ class MySQLGenerator(generator.Generator):
 
         return f"SHOW{full}{global_}{this}{json}{target}{for_table}{types}{db}{query}{log}{position}{channel}{mutex_or_status}{like}{where}{offset}{limit}{for_group}{for_user}{for_role}{into_outfile}"
 
+    def renametable_sql(self, expression: exp.RenameTable) -> str:
+        return self._rename_table_sql(expression)
+
     def alterrename_sql(self, expression: exp.AlterRename, include_to: bool = True) -> str:
         """To avoid TO keyword in ALTER ... RENAME statements.
         It's moved from Doris, because it's the same for all MySQL, Doris, and StarRocks.

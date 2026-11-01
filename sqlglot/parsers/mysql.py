@@ -184,6 +184,7 @@ class MySQLParser(parser.Parser):
     STATEMENT_PARSERS = {
         **parser.Parser.STATEMENT_PARSERS,
         TokenType.SHOW: lambda self: self._parse_show(),
+        TokenType.RENAME: lambda self: self._parse_rename_table(),
     }
 
     SHOW_PARSERS = {
@@ -816,3 +817,26 @@ class MySQLParser(parser.Parser):
             )
 
         return this
+
+    def _parse_rename_table(self) -> exp.RenameTable | exp.Command:
+        # https://dev.mysql.com/doc/refman/8.4/en/rename-table.html
+        start = self._prev
+        if not self._match(TokenType.TABLE):
+            return self._parse_as_command(start)
+
+        def _parse_rename_pair() -> exp.Alter | None:
+            this = self._parse_table_parts()
+            if not this or not self._match_text_seq("TO"):
+                return None
+            new_name = self._parse_table_parts()
+            if not new_name:
+                return None
+            return exp.Alter(this=this, kind="TABLE", actions=[exp.AlterRename(this=new_name)])
+
+        index = self._index
+        renames = self._parse_csv(_parse_rename_pair)
+        if not renames or not all(renames) or self._curr:
+            self._retreat(index)
+            return self._parse_as_command(start)
+
+        return self.expression(exp.RenameTable(expressions=renames))

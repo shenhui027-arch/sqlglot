@@ -10,6 +10,7 @@ from sqlglot.dialects.dialect import (
     time_format,
     weekstart_unit_to_str,
 )
+from sqlglot.generator import Generator
 from sqlglot.generators.mysql import MySQLGenerator
 
 
@@ -35,6 +36,9 @@ class DorisGenerator(MySQLGenerator):
     WITH_PROPERTIES_PREFIX = "PROPERTIES"
     RENAME_TABLE_WITH_DB = False
     UPDATE_STATEMENT_SUPPORTS_FROM = True
+
+    # Doris has no RENAME TABLE statement, only ALTER TABLE ... RENAME
+    renametable_sql = Generator.renametable_sql
 
     TYPE_MAPPING = {
         **MySQLGenerator.TYPE_MAPPING,

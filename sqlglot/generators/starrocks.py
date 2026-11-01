@@ -70,6 +70,9 @@ class StarRocksGenerator(MySQLGenerator):
     # StarRocks doesn't support renaming a table with a database.
     RENAME_TABLE_WITH_DB = False
 
+    # StarRocks has no RENAME TABLE statement, only ALTER TABLE ... RENAME
+    renametable_sql = Generator.renametable_sql
+
     ALTER_PARTITION_OPTIONS = (
         *MySQLGenerator.ALTER_PARTITION_OPTIONS,
         exp.DistributedByProperty,
