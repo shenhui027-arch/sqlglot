@@ -4511,6 +4511,21 @@ class Generator:
         expressions = f"({expressions})" if expressions else ""
         return f"ALTER{compound} SORTKEY {this or expressions}"
 
+    def renametable_sql(self, expression: exp.RenameTable) -> str:
+        renames = expression.expressions
+        if len(renames) == 1:
+            return self.sql(renames[0])
+
+        self.unsupported("Renaming multiple tables in one statement is not supported")
+        return self._rename_table_sql(expression)
+
+    def _rename_table_sql(self, expression: exp.RenameTable) -> str:
+        renames = ", ".join(
+            f"{self.sql(alter, 'this')} TO {self.sql(alter.actions[0], 'this')}"
+            for alter in expression.expressions
+        )
+        return f"RENAME TABLE {renames}"
+
     def alterrename_sql(self, expression: exp.AlterRename, include_to: bool = True) -> str:
         if not self.RENAME_TABLE_WITH_DB:
             # Remove db from tables

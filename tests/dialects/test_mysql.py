@@ -1,7 +1,7 @@
 import unittest
 import sys
 
-from sqlglot import UnsupportedError, expressions as exp
+from sqlglot import ErrorLevel, UnsupportedError, expressions as exp
 from sqlglot.dialects.mysql import MySQL
 from tests.dialects.test_dialect import Validator
 
@@ -2469,6 +2469,34 @@ COMMENT='客户账户表'"""
         ).this.expressions
         self.assertIsInstance(columns[0].constraints[1].kind, exp.CommentColumnConstraint)
         self.assertIsInstance(columns[1].constraints[1].kind, exp.InvisibleColumnConstraint)
+
+    def test_rename_table(self):
+        self.validate_identity("RENAME TABLE a TO b")
+        self.validate_identity("RENAME TABLE db1.a TO db2.b, db2.c TO db1.a")
+        self.validate_identity("RENAME TABLE `a` TO `b`")
+        self.validate_identity("RENAME USER 'u'@'h' TO 'v'@'h'", check_command_warning=True)
+
+        rename = self.parse_one("RENAME TABLE db.t TO db.t_old, db.t_new TO db.t")
+        self.assertIsInstance(rename, exp.RenameTable)
+        self.assertEqual(
+            [(alter.this.sql(), alter.actions[0].this.sql()) for alter in rename.expressions],
+            [("db.t", "db.t_old"), ("db.t_new", "db.t")],
+        )
+
+        self.validate_all(
+            "RENAME TABLE a TO b",
+            write={
+                "mysql": "RENAME TABLE a TO b",
+                "duckdb": "ALTER TABLE a RENAME TO b",
+                "postgres": "ALTER TABLE a RENAME TO b",
+                "starrocks": "ALTER TABLE a RENAME b",
+                "doris": "ALTER TABLE a RENAME b",
+            },
+        )
+        with self.assertRaises(UnsupportedError):
+            self.parse_one("RENAME TABLE a TO b, c TO d").sql(
+                "duckdb", unsupported_level=ErrorLevel.RAISE
+            )
 
     def test_alter_table_auto_increment(self):
         prop = self.parse_one("ALTER TABLE t AUTO_INCREMENT=3000000000").find(
