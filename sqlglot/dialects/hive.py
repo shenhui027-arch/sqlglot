@@ -123,6 +123,7 @@ class Hive(Dialect):
             "MSCK REPAIR": TokenType.COMMAND,
             "REFRESH": TokenType.REFRESH,
             "SERDEPROPERTIES": TokenType.SERDE_PROPERTIES,
+            "UNIONTYPE": TokenType.UNION,
         }
 
         NUMERIC_LITERALS = {
